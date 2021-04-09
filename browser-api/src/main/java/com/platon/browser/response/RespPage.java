@@ -1,6 +1,7 @@
 package com.platon.browser.response;
 
-import com.github.pagehelper.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,26 +15,32 @@ import java.util.List;
  * @data 2019年8月31日
  */
 public class RespPage<T> {
+
     /**
      * 相关的错误信息
      */
     private String errMsg = "";
+
     /**
      * 成功（0），失败则由相关失败码
      */
     private int code = 0;
+
     /**
      * 总数
      */
     private long totalCount;
+
     /**
      * 显示总数
      */
     private long displayTotalCount;
+
     /**
      * 总页数
      */
     private long totalPages;
+
     /**
      * 响应数据
      */
@@ -42,7 +49,7 @@ public class RespPage<T> {
     /**
      * 初始化数据
      */
-    public void init(Page<?> page, List<T> data) {
+    public void init(IPage<?> page, List<T> data) {
         this.setTotalCount(page.getTotal());
         this.setTotalPages(page.getPages());
         this.setDisplayTotalCount(page.getTotal());

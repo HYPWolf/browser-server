@@ -1,13 +1,17 @@
 package com.platon.browser.dao.mapper;
 
-import com.github.pagehelper.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.platon.browser.dao.entity.TokenInventory;
 import com.platon.browser.dao.entity.TokenInventoryExample;
 import com.platon.browser.dao.entity.TokenInventoryKey;
+
 import java.util.List;
+
 import org.apache.ibatis.annotations.Param;
 
 public interface TokenInventoryMapper {
+
     long countByExample(TokenInventoryExample example);
 
     int deleteByExample(TokenInventoryExample example);
@@ -18,7 +22,9 @@ public interface TokenInventoryMapper {
 
     int insertSelective(TokenInventory record);
 
-    Page<TokenInventory> selectByExample(TokenInventoryExample example);
+    IPage<TokenInventory> selectByExample(Page<TokenInventory> page, TokenInventoryExample example);
+
+    List<TokenInventory> selectByExample(TokenInventoryExample example);
 
     TokenInventory selectByPrimaryKey(TokenInventoryKey key);
 
@@ -46,5 +52,6 @@ public interface TokenInventoryMapper {
      * @mbg.generated
      * @project https://github.com/itfsw/mybatis-generator-plugin
      */
-    int batchInsertSelective(@Param("list") List<TokenInventory> list, @Param("selective") TokenInventory.Column ... selective);
+    int batchInsertSelective(@Param("list") List<TokenInventory> list, @Param("selective") TokenInventory.Column... selective);
+
 }

@@ -1,6 +1,7 @@
 package com.platon.browser.dao.mapper;
 
-import com.github.pagehelper.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.platon.browser.bean.CustomToken;
 import com.platon.browser.bean.CustomTokenDetail;
 import com.platon.browser.dao.entity.Token;
@@ -10,7 +11,7 @@ import java.util.List;
 
 public interface CustomTokenMapper {
 
-    Page<CustomToken> selectListByType(@Param("type") String type);
+    IPage<CustomToken> selectListByType(Page<CustomToken> page, @Param("type") String type);
 
     CustomTokenDetail selectDetailByAddress(@Param("address") String address);
 

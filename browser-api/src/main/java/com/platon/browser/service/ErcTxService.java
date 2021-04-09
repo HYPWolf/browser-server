@@ -4,12 +4,13 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
-import com.github.pagehelper.Page;
-import com.github.pagehelper.PageHelper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.platon.browser.bean.CommonConstant;
 import com.platon.browser.bean.CustomTokenHolder;
 import com.platon.browser.cache.TokenTransferRecordCacheDto;
 import com.platon.browser.config.DownFileCommon;
+import com.platon.browser.dao.entity.Node;
 import com.platon.browser.dao.mapper.CustomTokenHolderMapper;
 import com.platon.browser.elasticsearch.dto.ErcTx;
 import com.platon.browser.enums.I18nEnum;
@@ -274,13 +275,13 @@ public class ErcTxService {
             log.debug("~ tokenHolderList, params: " + JSON.toJSONString(req));
         }
         RespPage<QueryTokenHolderListResp> result = new RespPage<>();
-        PageHelper.startPage(req.getPageNo(), req.getPageSize());
-        Page<CustomTokenHolder> ids = this.customTokenHolderMapper.selectListByParams(req.getContract(), null, null);
-        if (ids == null || ids.isEmpty()) {
+        Page<CustomTokenHolder> page = new Page<>(req.getPageNo(), req.getPageSize());
+        IPage<CustomTokenHolder> ids = this.customTokenHolderMapper.selectListByParams(page, req.getContract(), null, null);
+        if (ids == null || ids.getRecords().isEmpty()) {
             return result;
         }
         List<QueryTokenHolderListResp> respList = new ArrayList<>();
-        ids.getResult().forEach(tokenHolder -> {
+        ids.getRecords().forEach(tokenHolder -> {
             QueryTokenHolderListResp resp = new QueryTokenHolderListResp();
             resp.setAddress(tokenHolder.getAddress());
             BigDecimal originBalance = getAddressBalance(tokenHolder);
@@ -321,20 +322,20 @@ public class ErcTxService {
         if (log.isDebugEnabled()) {
             log.debug("~ tokenHolderList, params: " + JSON.toJSONString(req));
         }
-        PageHelper.startPage(req.getPageNo(), req.getPageSize());
+        Page<CustomTokenHolder> page = new Page<>(req.getPageNo(), req.getPageSize());
         RespPage<QueryHolderTokenListResp> result = new RespPage<>();
-        Page<CustomTokenHolder> ids = null;
+        IPage<CustomTokenHolder> ids = null;
         if (ErcTypeEnum.ERC20.getDesc().equalsIgnoreCase(req.getType())) {
-            ids = customTokenHolderMapper.selectListByParams(null, req.getAddress(), req.getType());
+            ids = customTokenHolderMapper.selectListByParams(page, null, req.getAddress(), req.getType());
         }
         if (ErcTypeEnum.ERC721.getDesc().equalsIgnoreCase(req.getType())) {
-            ids = customTokenHolderMapper.selectListByERC721(null, req.getAddress());
+            ids = customTokenHolderMapper.selectListByERC721(page, null, req.getAddress());
         }
-        if (CollUtil.isEmpty(ids)) {
+        if (CollUtil.isEmpty(ids.getRecords())) {
             return result;
         }
         List<QueryHolderTokenListResp> listResps = new ArrayList<>();
-        ids.stream().forEach(tokenHolder -> {
+        ids.getRecords().stream().forEach(tokenHolder -> {
             QueryHolderTokenListResp queryHolderTokenListResp = new QueryHolderTokenListResp();
             BeanUtils.copyProperties(tokenHolder, queryHolderTokenListResp);
             queryHolderTokenListResp.setContract(tokenHolder.getTokenAddress());
@@ -353,10 +354,10 @@ public class ErcTxService {
     }
 
     public AccountDownload exportTokenHolderList(String contract, String local, String timeZone) {
-        PageHelper.startPage(CommonConstant.ES_PAGE_NUM, CommonConstant.ES_PAGE_SIZE);
-        Page<CustomTokenHolder> rs = this.customTokenHolderMapper.selectListByParams(contract, null, null);
+        Page<CustomTokenHolder> page = new Page<>(CommonConstant.ES_PAGE_NUM, CommonConstant.ES_PAGE_SIZE);
+        IPage<CustomTokenHolder> rs = this.customTokenHolderMapper.selectListByParams(page, contract, null, null);
         List<Object[]> rows = new ArrayList<>();
-        rs.forEach(customTokenHolder -> {
+        rs.getRecords().forEach(customTokenHolder -> {
             BigDecimal balance = this.getAddressBalance(customTokenHolder);
             Object[] row = {customTokenHolder.getAddress(),
                     HexUtil.append(ConvertUtil.convertByFactor(balance, customTokenHolder.getDecimal()).toString()),
@@ -372,7 +373,7 @@ public class ErcTxService {
     }
 
     public AccountDownload exportHolderTokenList(String address, String local, String timeZone, String type) {
-        PageHelper.startPage(CommonConstant.ES_PAGE_NUM, CommonConstant.ES_PAGE_SIZE);
+        Page<CustomTokenHolder> page = new Page<>(CommonConstant.ES_PAGE_NUM, CommonConstant.ES_PAGE_SIZE);
         String[] tokenType = {ErcTypeEnum.ERC20.getDesc(), ErcTypeEnum.ERC721.getDesc()};
         if (!ArrayUtil.contains(tokenType, type)) {
             type = null;
@@ -380,8 +381,8 @@ public class ErcTxService {
         List<Object[]> rows = new ArrayList<>();
         String[] headers;
         if (ErcTypeEnum.ERC721.getDesc().equalsIgnoreCase(type)) {
-            Page<CustomTokenHolder> rs = this.customTokenHolderMapper.findErc721TokenHolder(null, address, type);
-            rs.forEach(customTokenHolder -> {
+            IPage<CustomTokenHolder> rs = this.customTokenHolderMapper.findErc721TokenHolder(page, null, address, type);
+            rs.getRecords().forEach(customTokenHolder -> {
                 Object[] row = {customTokenHolder.getName(),
                         customTokenHolder.getSymbol(),
                         customTokenHolder.getTokenId(),
@@ -398,8 +399,8 @@ public class ErcTxService {
                     this.i18n.i(I18nEnum.DOWNLOAD_CONTRACT_CSV_CONTRACT, local)
             };
         } else {
-            Page<CustomTokenHolder> rs = this.customTokenHolderMapper.selectListByParams(null, address, type);
-            rs.stream().forEach(customTokenHolder -> {
+            IPage<CustomTokenHolder> rs = this.customTokenHolderMapper.selectListByParams(page, null, address, type);
+            rs.getRecords().stream().forEach(customTokenHolder -> {
                 BigDecimal balance = this.getAddressBalance(customTokenHolder);
                 Object[] row = {customTokenHolder.getName(), customTokenHolder.getSymbol(),
                         HexUtil.append(ConvertUtil.convertByFactor(balance, customTokenHolder.getDecimal()).toString()),

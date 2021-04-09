@@ -1,6 +1,7 @@
 package com.platon.browser.dao.mapper;
 
-import com.github.pagehelper.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.platon.browser.dao.entity.Node;
 import com.platon.browser.dao.entity.NodeExample;
 import org.apache.ibatis.annotations.Param;
@@ -26,7 +27,7 @@ public interface CustomNodeMapper {
      * @return
      * @method selectByExample
      */
-    Page<Node> selectListByExample(NodeExample example);
+    IPage<Node> selectListByExample(Page<Node> page,@Param("example") NodeExample example);
 
 
     int selectCountByActive();
@@ -41,6 +42,6 @@ public interface CustomNodeMapper {
      */
     List<Node> batchFindNodeNameByNodeId(@Param("nodeIds") Set<String> nodeIds);
 
-    Page<Node> findAliveStakingList(Integer status1, Integer isSettle1, boolean isUnion, Integer status2, Integer isSettle2);
+    IPage<Node> findAliveStakingList(Page<Node> page, Integer status1, Integer isSettle1, boolean isUnion, Integer status2, Integer isSettle2);
 
 }

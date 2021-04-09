@@ -1,11 +1,17 @@
 package com.platon.browser.dao.mapper;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.platon.browser.dao.entity.RpPlan;
 import com.platon.browser.dao.entity.Vote;
 import com.platon.browser.dao.entity.VoteExample;
+
 import java.util.List;
+
 import org.apache.ibatis.annotations.Param;
 
 public interface VoteMapper {
+
     long countByExample(VoteExample example);
 
     int deleteByExample(VoteExample example);
@@ -15,6 +21,8 @@ public interface VoteMapper {
     int insert(Vote record);
 
     int insertSelective(Vote record);
+
+    IPage<Vote> selectByExample(Page<Vote> page, VoteExample example);
 
     List<Vote> selectByExample(VoteExample example);
 
@@ -44,5 +52,6 @@ public interface VoteMapper {
      * @mbg.generated
      * @project https://github.com/itfsw/mybatis-generator-plugin
      */
-    int batchInsertSelective(@Param("list") List<Vote> list, @Param("selective") Vote.Column ... selective);
+    int batchInsertSelective(@Param("list") List<Vote> list, @Param("selective") Vote.Column... selective);
+
 }

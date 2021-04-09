@@ -1,6 +1,7 @@
 package com.platon.browser.dao.mapper;
 
-import com.github.pagehelper.Page;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.platon.browser.bean.CustomTokenHolder;
 import com.platon.browser.bean.TokenHolderCount;
 import com.platon.browser.dao.entity.TokenHolder;
@@ -10,7 +11,7 @@ import java.util.List;
 
 public interface CustomTokenHolderMapper {
 
-    Page<CustomTokenHolder> selectListByParams(@Param("tokenAddress") String tokenAddress, @Param("address") String address, @Param("type") String type);
+    IPage<CustomTokenHolder> selectListByParams(Page<CustomTokenHolder> page, @Param("tokenAddress") String tokenAddress, @Param("address") String address, @Param("type") String type);
 
     /**
      * 查询erc721令牌数量
@@ -22,7 +23,7 @@ public interface CustomTokenHolderMapper {
      * @author huangyongpeng@matrixelements.com
      * @date 2021/4/3
      */
-    Page<CustomTokenHolder> findErc721TokenHolder(@Param("tokenAddress") String tokenAddress, @Param("address") String address, @Param("type") String type);
+    IPage<CustomTokenHolder> findErc721TokenHolder(Page<CustomTokenHolder> page, @Param("tokenAddress") String tokenAddress, @Param("address") String address, @Param("type") String type);
 
     int batchInsertOrUpdateSelective(@Param("list") List<TokenHolder> list, @Param("selective") TokenHolder.Column... selective);
 
@@ -55,7 +56,7 @@ public interface CustomTokenHolderMapper {
      * @author huangyongpeng@matrixelements.com
      * @date 2021/3/19
      */
-    Page<CustomTokenHolder> selectListByERC721(@Param("tokenAddress") String tokenAddress, @Param("address") String address);
+    IPage<CustomTokenHolder> selectListByERC721(Page<CustomTokenHolder> page, @Param("tokenAddress") String tokenAddress, @Param("address") String address);
 
 
 }

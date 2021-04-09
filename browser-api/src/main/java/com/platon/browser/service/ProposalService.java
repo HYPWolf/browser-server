@@ -1,9 +1,9 @@
 package com.platon.browser.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.platon.browser.utils.NetworkParams;
 import com.platon.utils.Convert;
-import com.github.pagehelper.Page;
-import com.github.pagehelper.PageHelper;
 import com.platon.browser.bean.CustomProposal;
 import com.platon.browser.config.BlockChainConfig;
 import com.platon.browser.constant.Browser;
@@ -52,40 +52,47 @@ import java.util.Objects;
  */
 @Service
 public class ProposalService {
+
     Logger logger = LoggerFactory.getLogger(ProposalService.class);
+
     @Resource
     private I18nUtil i18n;
+
     @Resource
     private ProposalMapper proposalMapper;
+
     @Resource
     private StatisticCacheService statisticCacheService;
+
     @Resource
     private BlockChainConfig blockChainConfig;
+
     @Resource
     private EsBlockRepository ESBlockRepository;
+
     @Resource
     private NetworkParams networkParams;
 
     public RespPage<ProposalListResp> list(PageReq req) {
         RespPage<ProposalListResp> respPage = new RespPage<>();
         req = req == null ? new PageReq() : req;
-        Page<?> page = PageHelper.startPage(req.getPageNo(), req.getPageSize(), true);
+        Page<Proposal> page = new Page<>(req.getPageNo(), req.getPageSize());
         /** 暂时不显示总人数为0的数据，不然页面展示投票百分比事会出错   */
         ProposalExample proposalExample = new ProposalExample();
         proposalExample.setOrderByClause(" timestamp desc");
         ProposalExample.Criteria criteria = proposalExample.createCriteria();
         criteria.andAccuVerifiersNotEqualTo(0l);
-        List<Proposal> list = proposalMapper.selectByExample(proposalExample);
+        IPage<Proposal> list = proposalMapper.selectByExample(page, proposalExample);
         /** 分页查询提案数据 */
-        if (!CollectionUtils.isEmpty(list)) {
-            List<ProposalListResp> listResps = new ArrayList<>(list.size());
-            for (Proposal proposal : list) {
-            	/**
-            	 * 循环转换数据
-            	 */
-            	ProposalListResp proposalListResp = new ProposalListResp();
+        if (!CollectionUtils.isEmpty(list.getRecords())) {
+            List<ProposalListResp> listResps = new ArrayList<>(list.getRecords().size());
+            for (Proposal proposal : list.getRecords()) {
+                /**
+                 * 循环转换数据
+                 */
+                ProposalListResp proposalListResp = new ProposalListResp();
                 BeanUtils.copyProperties(proposal, proposalListResp);
-                proposalListResp.setTopic(Browser.INQUIRY.equals(proposal.getTopic())?"":proposal.getTopic());
+                proposalListResp.setTopic(Browser.INQUIRY.equals(proposal.getTopic()) ? "" : proposal.getTopic());
                 proposalListResp.setProposalHash(proposal.getHash());
                 proposalListResp.setEndVotingBlock(String.valueOf(proposal.getEndVotingBlock()));
                 proposalListResp.setType(String.valueOf(proposal.getType()));
@@ -105,7 +112,7 @@ public class ProposalService {
     }
 
     public BaseResp<ProposalDetailsResp> get(ProposalDetailRequest req) {
-    	/** 根据hash查询提案 */
+        /** 根据hash查询提案 */
         Proposal proposal = proposalMapper.selectByPrimaryKey(req.getProposalHash());
         if (Objects.isNull(proposal)) {
             logger.error("## ERROR # get record not exist proposalHash:{}", req.getProposalHash());
@@ -113,12 +120,12 @@ public class ProposalService {
         }
         ProposalDetailsResp proposalDetailsResp = new ProposalDetailsResp();
         BeanUtils.copyProperties(proposal, proposalDetailsResp);
-        proposalDetailsResp.setTopic(Browser.INQUIRY.equals(proposal.getTopic())?"":proposal.getTopic());
+        proposalDetailsResp.setTopic(Browser.INQUIRY.equals(proposal.getTopic()) ? "" : proposal.getTopic());
         proposalDetailsResp.setProposalHash(req.getProposalHash());
         proposalDetailsResp.setNodeId(proposal.getNodeId());
         proposalDetailsResp.setNodeName(proposal.getNodeName());
-        proposalDetailsResp.setDescription(Browser.INQUIRY.equals(proposal.getDescription())?"":proposal.getDescription());
-        proposalDetailsResp.setCanceledTopic(Browser.INQUIRY.equals(proposal.getCanceledTopic())?"":proposal.getCanceledTopic());
+        proposalDetailsResp.setDescription(Browser.INQUIRY.equals(proposal.getDescription()) ? "" : proposal.getDescription());
+        proposalDetailsResp.setCanceledTopic(Browser.INQUIRY.equals(proposal.getCanceledTopic()) ? "" : proposal.getCanceledTopic());
         proposalDetailsResp.setEndVotingBlock(String.valueOf(proposal.getEndVotingBlock()));
         proposalDetailsResp.setAccuVerifiers(String.valueOf(proposal.getAccuVerifiers()));
         proposalDetailsResp.setAbstentions(proposal.getAbstentions().intValue());
@@ -130,88 +137,89 @@ public class ProposalService {
         proposalDetailsResp.setCurBlock(String.valueOf(networkStat.getCurNumber()));
         /** 不同的类型有不同的通过率 */
         switch (CustomProposal.TypeEnum.getEnum(proposal.getType())) {
-        	/**
-         	* 文本提案
-         	*/
-			case TEXT:
-				proposalDetailsResp.setSupportRateThreshold(blockChainConfig.getMinProposalTextSupportRate().toString());
-				proposalDetailsResp.setParticipationRate(blockChainConfig.getMinProposalTextParticipationRate().toString());
-				break;
-			/**
-         	* 升级提案
-         	*/
-			case UPGRADE:
-				proposalDetailsResp.setSupportRateThreshold(blockChainConfig.getMinProposalUpgradePassRate().toString());
-				break;
-			/**
-         	* 参数提案
-         	*/
-			case PARAMETER:
-				proposalDetailsResp.setParamName(ConvertUtil.captureName(proposal.getName()));
-				String currentValue = proposal.getStaleValue();
-				String newValue = proposal.getNewValue();
-				/**
-				 * 如果参数是需要转换lat的，则进一步转换
-				 */
-				if(Browser.EXTRA_LAT_PARAM.contains(proposal.getName())) {
-					currentValue = Convert.fromVon(currentValue, Convert.Unit.KPVON).setScale(18,RoundingMode.HALF_UP).stripTrailingZeros().toPlainString() + networkParams.getUnit();
-					newValue = Convert.fromVon(newValue, Convert.Unit.KPVON).setScale(18,RoundingMode.HALF_UP).stripTrailingZeros().toPlainString() + networkParams.getUnit();
-				} 
-				/**
-				 * 去除无用的0
-				 */
-				if("slashFractionDuplicateSign".contains(proposal.getName())) {
-					currentValue = new BigDecimal(currentValue).setScale(18,RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
-					newValue = new BigDecimal(newValue).setScale(18,RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
-				}
-				proposalDetailsResp.setCurrentValue(currentValue);
-				proposalDetailsResp.setNewValue(newValue);
-				proposalDetailsResp.setSupportRateThreshold(blockChainConfig.getParamProposalSupportRate().toString());
-				proposalDetailsResp.setParticipationRate(blockChainConfig.getParamProposalVoteRate().toString());
-				break;
-			/**
-         	* 取消提案
-         	*/
-			case CANCEL:
-				 /**
-		         * 如果被取消的提案标题没有就查询对应的提案确认返回的交易标题
-		         */
-		        if(StringUtils.isBlank(proposalDetailsResp.getCanceledTopic())) {
-		        	Proposal cancelProposal = proposalMapper.selectByPrimaryKey(proposal.getCanceledPipId());
-		        	if (cancelProposal != null && CustomProposal.TypeEnum.getEnum(cancelProposal.getType()) == CustomProposal.TypeEnum.UPGRADE) {
-                            proposalDetailsResp.setCanceledTopic("版本升级-V" + ChainVersionUtil.toStringVersion(new BigInteger(cancelProposal.getNewVersion())));
-		        	}
-		        }
-				proposalDetailsResp.setSupportRateThreshold(blockChainConfig.getMinProposalCancelSupportRate().toString());
-				proposalDetailsResp.setParticipationRate(blockChainConfig.getMinProposalCancelParticipationRate().toString());
-				break;
-			default:
-				break;
-		}
+            /**
+             * 文本提案
+             */
+            case TEXT:
+                proposalDetailsResp.setSupportRateThreshold(blockChainConfig.getMinProposalTextSupportRate().toString());
+                proposalDetailsResp.setParticipationRate(blockChainConfig.getMinProposalTextParticipationRate().toString());
+                break;
+            /**
+             * 升级提案
+             */
+            case UPGRADE:
+                proposalDetailsResp.setSupportRateThreshold(blockChainConfig.getMinProposalUpgradePassRate().toString());
+                break;
+            /**
+             * 参数提案
+             */
+            case PARAMETER:
+                proposalDetailsResp.setParamName(ConvertUtil.captureName(proposal.getName()));
+                String currentValue = proposal.getStaleValue();
+                String newValue = proposal.getNewValue();
+                /**
+                 * 如果参数是需要转换lat的，则进一步转换
+                 */
+                if (Browser.EXTRA_LAT_PARAM.contains(proposal.getName())) {
+                    currentValue = Convert.fromVon(currentValue, Convert.Unit.KPVON).setScale(18, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString() + networkParams.getUnit();
+                    newValue = Convert.fromVon(newValue, Convert.Unit.KPVON).setScale(18, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString() + networkParams.getUnit();
+                }
+                /**
+                 * 去除无用的0
+                 */
+                if ("slashFractionDuplicateSign".contains(proposal.getName())) {
+                    currentValue = new BigDecimal(currentValue).setScale(18, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+                    newValue = new BigDecimal(newValue).setScale(18, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+                }
+                proposalDetailsResp.setCurrentValue(currentValue);
+                proposalDetailsResp.setNewValue(newValue);
+                proposalDetailsResp.setSupportRateThreshold(blockChainConfig.getParamProposalSupportRate().toString());
+                proposalDetailsResp.setParticipationRate(blockChainConfig.getParamProposalVoteRate().toString());
+                break;
+            /**
+             * 取消提案
+             */
+            case CANCEL:
+                /**
+                 * 如果被取消的提案标题没有就查询对应的提案确认返回的交易标题
+                 */
+                if (StringUtils.isBlank(proposalDetailsResp.getCanceledTopic())) {
+                    Proposal cancelProposal = proposalMapper.selectByPrimaryKey(proposal.getCanceledPipId());
+                    if (cancelProposal != null && CustomProposal.TypeEnum.getEnum(cancelProposal.getType()) == CustomProposal.TypeEnum.UPGRADE) {
+                        proposalDetailsResp.setCanceledTopic("版本升级-V" + ChainVersionUtil.toStringVersion(new BigInteger(cancelProposal.getNewVersion())));
+                    }
+                }
+                proposalDetailsResp.setSupportRateThreshold(blockChainConfig.getMinProposalCancelSupportRate().toString());
+                proposalDetailsResp.setParticipationRate(blockChainConfig.getMinProposalCancelParticipationRate().toString());
+                break;
+            default:
+                break;
+        }
         /**
          * 如果结束区块跟当前区块差值大于0则按照区块时间进行计算，否则直接获取已结束区块的时间
          */
         BigDecimal diff = new BigDecimal(proposalDetailsResp.getEndVotingBlock()).subtract(new BigDecimal(proposalDetailsResp.getCurBlock()));
         Block block;
-        if(diff.compareTo(BigDecimal.ZERO) > 0) {
-        	/** 结束时间预估：（生效区块-当前区块）*出块间隔 + 区块现有时间 */
-    		try {
-    			block = ESBlockRepository.get(proposalDetailsResp.getCurBlock(), Block.class);
+        if (diff.compareTo(BigDecimal.ZERO) > 0) {
+            /** 结束时间预估：（生效区块-当前区块）*出块间隔 + 区块现有时间 */
+            try {
+                block = ESBlockRepository.get(proposalDetailsResp.getCurBlock(), Block.class);
                 BigDecimal endTime = diff.multiply(new BigDecimal(networkStat.getAvgPackTime())).add(new BigDecimal(block.getTime().getTime()));
                 proposalDetailsResp.setEndVotingBlockTime(endTime.longValue());
-    		} catch (IOException e) {
-    			logger.error("获取区块错误。", e);
-    		}
+            } catch (IOException e) {
+                logger.error("获取区块错误。", e);
+            }
         } else {
-    		try {
-    			block = ESBlockRepository.get(proposalDetailsResp.getEndVotingBlock(), Block.class);
+            try {
+                block = ESBlockRepository.get(proposalDetailsResp.getEndVotingBlock(), Block.class);
                 proposalDetailsResp.setEndVotingBlockTime(block.getTime().getTime());
-    		} catch (IOException e) {
-    			logger.error("获取区块错误。", e);
-    		}
+            } catch (IOException e) {
+                logger.error("获取区块错误。", e);
+            }
         }
-        
-    	proposalDetailsResp.setInBlock(proposal.getBlockNumber());
+
+        proposalDetailsResp.setInBlock(proposal.getBlockNumber());
         return BaseResp.build(RetEnum.RET_SUCCESS.getCode(), i18n.i(I18nEnum.SUCCESS), proposalDetailsResp);
     }
+
 }
