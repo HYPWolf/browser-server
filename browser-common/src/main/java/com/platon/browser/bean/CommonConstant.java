@@ -23,4 +23,10 @@ public class CommonConstant {
      */
     public static final Integer ES_PAGE_SIZE = 30000;
 
+    /**
+     * 常量日志级别
+     */
+    public static final String LOGGING_LEVEL = "logging.level.";
+
+
 }

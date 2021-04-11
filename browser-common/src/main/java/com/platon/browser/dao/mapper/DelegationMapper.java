@@ -1,5 +1,6 @@
 package com.platon.browser.dao.mapper;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.platon.browser.dao.entity.Delegation;
 import com.platon.browser.dao.entity.DelegationExample;
 import com.platon.browser.dao.entity.DelegationKey;
@@ -21,6 +22,8 @@ public interface DelegationMapper {
     int insertSelective(Delegation record);
 
     List<Delegation> selectByExample(DelegationExample example);
+
+    IPage<Delegation> selectByExample(IPage<Delegation> page, DelegationExample example);
 
     Delegation selectByPrimaryKey(DelegationKey key);
 

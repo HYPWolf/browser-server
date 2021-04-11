@@ -1,11 +1,15 @@
 package com.platon.browser.dao.mapper;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.platon.browser.dao.entity.Address;
 import com.platon.browser.dao.entity.AddressExample;
+
 import java.util.List;
+
 import org.apache.ibatis.annotations.Param;
 
 public interface AddressMapper {
+
     long countByExample(AddressExample example);
 
     int deleteByExample(AddressExample example);
@@ -19,6 +23,8 @@ public interface AddressMapper {
     List<Address> selectByExampleWithBLOBs(AddressExample example);
 
     List<Address> selectByExample(AddressExample example);
+
+    IPage<Address> selectByExample(IPage<Address> page, AddressExample example);
 
     Address selectByPrimaryKey(String address);
 
@@ -50,5 +56,6 @@ public interface AddressMapper {
      * @mbg.generated
      * @project https://github.com/itfsw/mybatis-generator-plugin
      */
-    int batchInsertSelective(@Param("list") List<Address> list, @Param("selective") Address.Column ... selective);
+    int batchInsertSelective(@Param("list") List<Address> list, @Param("selective") Address.Column... selective);
+
 }

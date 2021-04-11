@@ -22,7 +22,7 @@ public interface VoteMapper {
 
     int insertSelective(Vote record);
 
-    IPage<Vote> selectByExample(Page<Vote> page, VoteExample example);
+    IPage<Vote> selectByExample(IPage<Vote> page, VoteExample example);
 
     List<Vote> selectByExample(VoteExample example);
 

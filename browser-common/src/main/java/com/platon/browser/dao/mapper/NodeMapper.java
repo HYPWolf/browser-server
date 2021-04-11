@@ -1,11 +1,15 @@
 package com.platon.browser.dao.mapper;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.platon.browser.dao.entity.Node;
 import com.platon.browser.dao.entity.NodeExample;
+
 import java.util.List;
+
 import org.apache.ibatis.annotations.Param;
 
 public interface NodeMapper {
+
     long countByExample(NodeExample example);
 
     int deleteByExample(NodeExample example);
@@ -19,6 +23,8 @@ public interface NodeMapper {
     List<Node> selectByExampleWithBLOBs(NodeExample example);
 
     List<Node> selectByExample(NodeExample example);
+
+    IPage<Node> selectByExample(IPage<Node> page, NodeExample example);
 
     Node selectByPrimaryKey(String nodeId);
 
@@ -50,5 +56,6 @@ public interface NodeMapper {
      * @mbg.generated
      * @project https://github.com/itfsw/mybatis-generator-plugin
      */
-    int batchInsertSelective(@Param("list") List<Node> list, @Param("selective") Node.Column ... selective);
+    int batchInsertSelective(@Param("list") List<Node> list, @Param("selective") Node.Column... selective);
+
 }

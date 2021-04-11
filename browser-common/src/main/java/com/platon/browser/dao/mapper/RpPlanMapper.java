@@ -20,7 +20,7 @@ public interface RpPlanMapper {
 
     int insertSelective(RpPlan record);
 
-    IPage<RpPlan> selectByExample(Page<RpPlan> page, RpPlanExample example);
+    IPage<RpPlan> selectByExample(IPage<RpPlan> page, RpPlanExample example);
 
     List<RpPlan> selectByExample(RpPlanExample example);
 

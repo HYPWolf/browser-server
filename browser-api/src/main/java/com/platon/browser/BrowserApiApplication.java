@@ -1,13 +1,13 @@
 package com.platon.browser;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import com.platon.browser.dao.mapper.NetworkStatMapper;
 import com.platon.browser.enums.AppStatus;
 import com.platon.browser.utils.AppStatusUtil;
 import com.ulisesbocchio.jasyptspringboot.annotation.EnableEncryptableProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -36,7 +36,7 @@ public class BrowserApiApplication implements ApplicationRunner {
     @Value("${platon.zeroBlockNumber.wait-time:1}")
     private Integer zeroBlockNumberWaitTime;
 
-    @Autowired
+    @Resource
     DataSource dataSource;
 
     /**

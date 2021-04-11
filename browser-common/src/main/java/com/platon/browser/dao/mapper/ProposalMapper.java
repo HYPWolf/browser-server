@@ -21,7 +21,7 @@ public interface ProposalMapper {
 
     int insertSelective(Proposal record);
 
-    IPage<Proposal> selectByExample(Page<Proposal> page, ProposalExample example);
+    IPage<Proposal> selectByExample(IPage<Proposal> page, ProposalExample example);
 
     List<Proposal> selectByExample(ProposalExample example);
 

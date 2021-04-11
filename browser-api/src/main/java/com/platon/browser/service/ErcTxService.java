@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.platon.browser.bean.CommonConstant;
 import com.platon.browser.bean.CustomTokenHolder;
+import com.platon.browser.cache.TestBean;
 import com.platon.browser.cache.TokenTransferRecordCacheDto;
 import com.platon.browser.config.DownFileCommon;
 import com.platon.browser.dao.entity.Node;
@@ -38,6 +39,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -59,6 +62,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@RefreshScope
 public class ErcTxService {
 
     @Resource
@@ -84,7 +88,11 @@ public class ErcTxService {
      */
     private static final Integer Decimal = 6;
 
+    @Resource
+    private TestBean testBean;
+
     public RespPage<QueryTokenTransferRecordListResp> token20TransferList(QueryTokenTransferRecordListReq req) {
+        log.error("======{}", testBean.getActive());
         return getList(req, esErc20TxRepository, ErcTypeEnum.ERC20);
     }
 
