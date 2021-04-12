@@ -436,7 +436,7 @@ CREATE TABLE `token_holder` (
 DROP TABLE IF EXISTS `token_inventory`;
 CREATE TABLE `token_inventory` (
                                    `token_address` varchar(64) NOT NULL COMMENT '合约地址',
-                                   `token_id` bigint(80) NOT NULL COMMENT 'token id',
+                                   `token_id` varchar(128) NOT NULL COMMENT 'token id',
                                    `owner` varchar(64) NOT NULL COMMENT 'token id 对应持有者地址',
                                    `name` varchar(256) DEFAULT NULL COMMENT 'Identifies the asset to which this NFT represents',
                                    `description` varchar(256) DEFAULT NULL COMMENT 'Describes the asset to which this NFT represents',

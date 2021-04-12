@@ -23,7 +23,7 @@ mybatisGenerator {
     configFile = "browser-common.xml"
 
     dependencies {
-        mybatisGenerator project(':browser-generator')
+        mybatisGenerator project(':scan-generator')
         mybatisGenerator itfswMybatisGeneratorPlugin
         mybatisGenerator mybatisGeneratorCore
         runtimeOnly 'mysql:mysql-connector-java:5.1.47'

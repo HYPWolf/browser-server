@@ -1,5 +1,5 @@
 dependencies {
-    compile project(":browser-common")
+    compile project(":scan-common")
     compile "com.alibaba:druid:$druidVersion"
     compile "com.univocity:univocity-parsers:$univocityVersion"
     runtimeOnly "mysql:mysql-connector-java:$mysqlConnectorVersion"

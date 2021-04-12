@@ -76,4 +76,4 @@ CREATE TABLE `token_inventory` (
                                    PRIMARY KEY (`token_address`,`token_id`)
 );
 
-
+ALTER TABLE token_inventory MODIFY COLUMN token_id VARCHAR ( 128 );

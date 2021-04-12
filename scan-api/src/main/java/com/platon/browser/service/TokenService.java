@@ -3,6 +3,12 @@ package com.platon.browser.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.platon.browser.bean.*;
+import cn.hutool.core.util.StrUtil;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
+import com.platon.browser.bean.CustomToken;
+import com.platon.browser.bean.CustomTokenDetail;
+import com.platon.browser.bean.CustomTokenInventory;
 import com.platon.browser.config.DownFileCommon;
 import com.platon.browser.dao.entity.TokenInventory;
 import com.platon.browser.dao.entity.TokenInventoryExample;
@@ -27,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -108,17 +113,16 @@ public class TokenService {
     }
 
     public QueryTokenIdDetailResp queryTokenIdDetail(QueryTokenIdDetailReq req) {
-        BigInteger tokenId = StringUtils.isNotBlank(req.getTokenId()) ? new BigInteger(req.getTokenId()) : BigInteger.ZERO;
         TokenInventoryKey tokenInventoryKey = new TokenInventoryKey();
         tokenInventoryKey.setTokenAddress(req.getContract());
-        tokenInventoryKey.setTokenId(tokenId);
+        tokenInventoryKey.setTokenId(StrUtil.emptyToDefault(req.getTokenId(), "0"));
         CustomTokenInventory customTokenInventory = customTokenInventoryMapper.selectTokenInventory(tokenInventoryKey);
         QueryTokenIdDetailResp.copy(customTokenInventory);
         return QueryTokenIdDetailResp.copy(customTokenInventory);
     }
 
     public AccountDownload exportTokenId(String address, String contract, String tokenId, String local, String timeZone) {
-        Page<TokenInventory> page = new Page<>(1, 30000);
+        Page<TokenInventory> page = new Page<>(1, 3000);
         TokenInventoryExample example = new TokenInventoryExample();
         TokenInventoryExample.Criteria criteria = example.createCriteria();
         //根据地址、合约地址、tokenid去查询列表

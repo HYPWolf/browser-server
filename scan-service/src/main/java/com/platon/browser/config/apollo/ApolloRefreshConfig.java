@@ -37,7 +37,7 @@ public class ApolloRefreshConfig implements ApplicationContextAware {
     private LoggingSystem loggingSystem;
 
     /**
-     * 监听配置
+     * 监听配置，namespaces尽量和配置文件的保持一致
      *
      * @param changeEvent
      * @return void
