@@ -44,3 +44,5 @@ browser-api/out
 browser-common/out
 browser-service/out
 /apolloCache/
+/adjust.log
+*info.md
