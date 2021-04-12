@@ -5,7 +5,7 @@ USE `alaya_browser`;
 DROP TABLE IF EXISTS `address`;
 CREATE TABLE `address` (
                            `address` varchar(42) NOT NULL COMMENT '地址',
-                           `type` int(11) NOT NULL COMMENT '地址类型 :1账号,2内置合约 ,3EVM合约,4WASM合约',
+                           `type` int(11) NOT NULL COMMENT '地址类型 :1账号,2内置合约,3EVM合约,4WASM合约,5Erc20,6Erc721',
                            `balance` decimal(65,0) NOT NULL DEFAULT '0' COMMENT '余额(von)',
                            `restricting_balance` decimal(65,0) NOT NULL DEFAULT '0' COMMENT '锁仓余额(von)',
                            `staking_value` decimal(65,0) NOT NULL DEFAULT '0' COMMENT '质押的金额(von)',

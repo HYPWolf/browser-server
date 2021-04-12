@@ -335,7 +335,6 @@ subprojects {
         implementation group: 'com.ctrip.framework.apollo', name: 'apollo-client', version: '1.8.0'
         // apollo整合spring-cloud-context实现配置动态刷新
         implementation group: 'org.springframework.cloud', name: 'spring-cloud-context', version: '3.0.0'
-        implementation group: 'org.apache.logging.log4j', name: 'log4j-jcl', version: '2.14.0'
 
     }
 }
