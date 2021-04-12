@@ -22,11 +22,19 @@ env: DEV
 logging:
   #日志级别
   level:
-    org.springframework: info
-    com.platon.browser: info
-    com.platon.browser.service: info
-    com.platon.browser.task: info
-    com.platon.browser.client: info
-    com.platon.browser.dao: info
+    org.springframework: error
+    org.springframework.retry: error
+    com.platon.browser: error
+    com.platon.browser.bootstrap: error
+    com.platon.browser.collection: error
+    com.platon.browser.collection.queue.handler: error
+    com.platon.browser.common: error
+    com.platon.browser.complement: error
+    com.platon.browser.complement.handler: error
+    com.platon.browser.complement.converter: error
+    com.platon.browser.persistence: error
+    com.platon.browser.persistence.handler: error
+    com.platon.browser.persistence.queue.handler: error
+    com.platon.browser.task: error
   file:
     name: ./logs/scan-agent.log
