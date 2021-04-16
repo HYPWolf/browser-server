@@ -96,7 +96,7 @@ public class TokenService {
             criteria.andTokenAddressEqualTo(req.getContract());
         }
         if (StringUtils.isNotBlank(req.getTokenId())) {
-            criteria.andTokenIdEqualTo(Long.valueOf(req.getTokenId()));
+            criteria.andTokenIdEqualTo(req.getTokenId());
         }
         IPage<TokenInventory> tokenInventorys = tokenInventoryMapper.selectByExample(page, example);
         List<QueryTokenIdListResp> resps = new ArrayList<>();
@@ -129,7 +129,7 @@ public class TokenService {
             criteria.andTokenAddressEqualTo(contract);
         }
         if (StringUtils.isNotBlank(tokenId)) {
-            criteria.andTokenIdEqualTo(Long.valueOf(tokenId));
+            criteria.andTokenIdEqualTo(tokenId);
         }
         IPage<TokenInventory> tokenInventorys = tokenInventoryMapper.selectByExample(page, example);
         String[] headers = {

@@ -1,5 +1,6 @@
 package com.platon.browser.analyzer;
 
+import cn.hutool.json.JSONUtil;
 import com.platon.browser.bean.CollectionBlock;
 import com.platon.browser.bean.CollectionTransaction;
 import com.platon.browser.bean.ComplementInfo;
@@ -181,7 +182,7 @@ public class TransactionAnalyzer {
                 .setBin(ci.getBinCode())
                 .setMethod(ci.getMethod());
 
-        ercTokenAnalyzer.resolveTx(result, receipt);
+        ercTokenAnalyzer.resolveTx(collectionBlock, result, receipt);
 
         // 累加总交易数
         collectionBlock.setTxQty(collectionBlock.getTxQty() + 1);

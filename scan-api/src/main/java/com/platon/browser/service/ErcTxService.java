@@ -15,6 +15,7 @@ import com.platon.browser.dao.entity.Node;
 import com.platon.browser.dao.mapper.CustomTokenHolderMapper;
 import com.platon.browser.elasticsearch.dto.ErcTx;
 import com.platon.browser.enums.I18nEnum;
+import com.platon.browser.enums.TokenTypeEnum;
 import com.platon.browser.request.token.QueryHolderTokenListReq;
 import com.platon.browser.request.token.QueryTokenHolderListReq;
 import com.platon.browser.request.token.QueryTokenTransferRecordListReq;
@@ -29,10 +30,7 @@ import com.platon.browser.service.elasticsearch.EsErc721TxRepository;
 import com.platon.browser.service.elasticsearch.bean.ESResult;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilderConstructor;
 import com.platon.browser.service.elasticsearch.query.ESQueryBuilders;
-import com.platon.browser.utils.ConvertUtil;
-import com.platon.browser.utils.DateUtil;
-import com.platon.browser.utils.HexUtil;
-import com.platon.browser.utils.I18nUtil;
+import com.platon.browser.utils.*;
 import com.platon.browser.v0152.enums.ErcTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -156,11 +154,23 @@ public class ErcTxService {
             // response filed to show.
             constructor.setResult(new String[]{"seq", "hash", "bn", "from", "contract",
                     "to", "value", "decimal", "name", "symbol", "result", "bTime"});
+
+            ESQueryBuilderConstructor count = new ESQueryBuilderConstructor();
+            if (StringUtils.isNotEmpty(req.getContract())) {
+                count.must(new ESQueryBuilders().terms("contract", Collections.singletonList(req.getContract())));
+            }
+            if (StringUtils.isNotEmpty(req.getAddress())) {
+                count.buildMust(new BoolQueryBuilder()
+                        .should(QueryBuilders.termQuery("from", req.getAddress()))
+                        .should(QueryBuilders.termQuery("to", req.getAddress())));
+            }
+
             try {
                 queryResultFromES = repository.search(constructor, ErcTx.class,
                         req.getPageNo(), req.getPageSize());
-                totalCount = queryResultFromES.getTotal();
-                displayTotalCount = queryResultFromES.getTotal();
+                ESResult<?> res = repository.Count(count);
+                totalCount = res.getTotal();
+                displayTotalCount = res.getTotal();
             } catch (Exception e) {
                 log.error("检索代币交易列表失败", e);
                 return result;
@@ -181,15 +191,15 @@ public class ErcTxService {
     }
 
     public AccountDownload exportToken20TransferList(String address, String contract, Long date, String local, String timeZone) {
-        return this.exportTokenTransferList(address, contract, date, local, timeZone, esErc20TxRepository, null);
+        return this.exportTokenTransferList(address, contract, date, local, timeZone, esErc20TxRepository, null, TokenTypeEnum.ERC20);
     }
 
     public AccountDownload exportToken721TransferList(String address, String contract, Long date, String local, String timeZone, String tokenId) {
-        return this.exportTokenTransferList(address, contract, date, local, timeZone, esErc721TxRepository, tokenId);
+        return this.exportTokenTransferList(address, contract, date, local, timeZone, esErc721TxRepository, tokenId, TokenTypeEnum.ERC721);
     }
 
     public AccountDownload exportTokenTransferList(String address, String contract, Long date, String local, String timeZone
-            , AbstractEsRepository repository, String tokenId) {
+            , AbstractEsRepository repository, String tokenId, TokenTypeEnum tokenTypeEnum) {
         AccountDownload accountDownload = new AccountDownload();
         if (StringUtils.isBlank(address) && StringUtils.isBlank(contract)) {
             return accountDownload;
@@ -242,12 +252,19 @@ public class ErcTxService {
                 };
                 rows.add(row);
             } else if (StringUtils.isNotBlank(contract)) {
+                String symbol = "";
+                if (tokenTypeEnum.equals(TokenTypeEnum.ERC20)) {
+                    symbol = esTokenTransferRecord.getSymbol();
+                }
+                if (tokenTypeEnum.equals(TokenTypeEnum.ERC721)) {
+                    symbol = StrUtil.format("{}({})", esTokenTransferRecord.getName(), esTokenTransferRecord.getSymbol());
+                }
                 Object[] row = {esTokenTransferRecord.getHash(),
                         DateUtil.timeZoneTransfer(esTokenTransferRecord.getBTime(), "0", timeZone),
                         esTokenTransferRecord.getFrom(), esTokenTransferRecord.getTo(),
                         /** 数值von转换成lat，并保留十八位精确度 */
                         HexUtil.append(ConvertUtil.convertByFactor(new BigDecimal(esTokenTransferRecord.getValue()), esTokenTransferRecord.getDecimal()).toString()),
-                        esTokenTransferRecord.getSymbol()
+                        symbol
                 };
                 rows.add(row);
             }
@@ -262,12 +279,22 @@ public class ErcTxService {
                     this.i18n.i(I18nEnum.DOWNLOAD_CONTRACT_CSV_VALUE_OUT, local),
                     this.i18n.i(I18nEnum.DOWNLOAD_CONTRACT_CSV_SYMBOL, local)};
         } else if (StringUtils.isNotBlank(contract)) {
-            headers = new String[]{this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_HASH, local),
-                    this.i18n.i(I18nEnum.DOWNLOAD_BLOCK_CSV_TIMESTAMP, local),
-                    this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_FROM, local),
-                    this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_TO, local),
-                    this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_VALUE, local),
-                    this.i18n.i(I18nEnum.DOWNLOAD_CONTRACT_CSV_SYMBOL, local)};
+            if (tokenTypeEnum.equals(TokenTypeEnum.ERC20)) {
+                headers = new String[]{this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_HASH, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_BLOCK_CSV_TIMESTAMP, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_FROM, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_TO, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_VALUE, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_CONTRACT_CSV_SYMBOL, local)};
+            }
+            if (tokenTypeEnum.equals(TokenTypeEnum.ERC721)) {
+                headers = new String[]{this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_HASH, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_BLOCK_CSV_TIMESTAMP, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_FROM, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_ACCOUNT_CSV_TO, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_CONTRACT_CSV_TOKEN_ID, local),
+                        this.i18n.i(I18nEnum.DOWNLOAD_CONTRACT_CSV_TOKEN, local)};
+            }
         }
         String fileName = "";
         if (StrUtil.isNotBlank(address)) {
@@ -367,10 +394,17 @@ public class ErcTxService {
         List<Object[]> rows = new ArrayList<>();
         rs.getRecords().forEach(customTokenHolder -> {
             BigDecimal balance = this.getAddressBalance(customTokenHolder);
+            // 总供应量作为分母，为0的话，则百分比为0
+            BigDecimal percentage;
+            if (MathUtil.isZeroOrNull(customTokenHolder.getTotalSupply())) {
+                percentage = BigDecimal.ZERO;
+            } else {
+                percentage = balance.divide(customTokenHolder.getTotalSupply(), 4, RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
+            }
             Object[] row = {customTokenHolder.getAddress(),
                     HexUtil.append(ConvertUtil.convertByFactor(balance, customTokenHolder.getDecimal()).toString()),
-                    balance.divide(customTokenHolder.getTotalSupply(), 4)
-                            .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP).toString() + "%"
+                    percentage.toString() + "%"
             };
             rows.add(row);
         });
