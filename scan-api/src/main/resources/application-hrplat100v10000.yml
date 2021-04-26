@@ -136,3 +136,9 @@ limit:
 output:
   file:
     url: ./
+xxl:
+  job:
+    admin:
+      addresses: http://192.168.9.149:8081/xxl-job-admin
+    executor:
+      appname: scan-agent
